@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
+import router from './router';
 
 Vue.config.productionTip = false
 
@@ -28,8 +29,8 @@ const db = getFirestore(app);
 
 Vue.prototype.$db = db;
 
-console.log(Vue.prototype)
 new Vue({
   vuetify,
+  router,
   render: h => h(App)
 }).$mount('#app')
