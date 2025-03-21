@@ -14,7 +14,7 @@
         <tbody>
           <tr v-for="item in postList" :key="item.id" class="text-center">
             <td>{{ item.id }}</td>
-            <td>{{ item.title }}</td>
+            <td @click="doDetail(item.id)">{{ item.title }}</td>
             <td>{{ item.content }}</td>
             <td>{{ item.writer }}</td>
             <td>{{ item.createdAt }}</td>
@@ -60,6 +60,9 @@ export default {
           });
         }
       });
+    },
+    doDetail(id) {
+      this.$router.push({ path: '/write', query: { id } });
     }
   }
 }
