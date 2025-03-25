@@ -3,19 +3,13 @@
     <v-form ref="form" class="pt-10" style="top: 43px;position: relative;">
       <v-text-field v-model="form.title" label="제목"/>
       <v-textarea v-model="form.content" label="내용" rows="5"/>
-      <v-text-field v-model="form.writer" label="작성자"/>
+      <v-text-field v-model="form.writer" label="작성자" :readonly="true"/>
       <div class="text-right">
         <template v-if="id != null && id != ''">
-          <v-btn color="success" @click="updatePost">
-            수정
-          </v-btn>
-          <v-btn color="error ml-3" @click="deletePost">
-            삭제
-          </v-btn>
+          <v-btn color="success" @click="updatePost">수정</v-btn>
+          <v-btn color="error ml-3" @click="deletePost">삭제</v-btn>
         </template>
-        <v-btn v-else color="primary" @click="createPost">
-          등록
-        </v-btn>
+        <v-btn v-else color="primary" @click="createPost">등록</v-btn>
       </div>
     </v-form>
   </v-container>
@@ -23,11 +17,22 @@
 
 <script>
 import { ref, push, set, get, child, update } from "firebase/database";
+import { onAuthStateChanged } from "firebase/auth"; // 인증 확인을 위해 추가
 
 export default {
   created() {
     this.id = this.$route.query.id;
-    if(this.id != null && this.id != '') {
+
+    // 로그인 여부 확인 및 작성자 설정
+    onAuthStateChanged(this.$auth, (user) => {
+      if (user) {
+        this.form.writer = user.email || user.uid; // 이메일 또는 uid로 표시
+      } else {
+        this.form.writer = "미로그인 사용자";
+      }
+    });
+
+    if (this.id != null && this.id !== '') {
       this.doDetail();
     }
   },
@@ -36,10 +41,10 @@ export default {
       form: {
         title: '',
         content: '',
-        writer: '',
+        writer: '', // 초기 상태는 빈 문자열
       },
       id: null,
-    }
+    };
   },
   methods: {
     createPost() {
@@ -58,11 +63,10 @@ export default {
           set(newPostRef, postData);
           alert("게시글이 등록되었습니다.");
 
-          // 입력 초기화
+          // 입력 초기화 (작성자는 유지)
           this.form.title = '';
           this.form.content = '';
-          this.form.writer = '';
-        })
+        });
       } catch (error) {
         console.error("게시글 등록 실패:", error);
         alert("게시글 등록 중 오류가 발생했습니다.");
@@ -70,7 +74,6 @@ export default {
     },
     doDetail() {
       const db = ref(this.$db);
-
       this.$nextTick(() => {
         get(child(db, `posts/${this.id}`))
           .then((snapshot) => {
@@ -78,7 +81,7 @@ export default {
               const data = snapshot.val();
               this.form.title = data.title;
               this.form.content = data.content;
-              this.form.writer = data.writer;
+              this.form.writer = data.writer; // 작성자는 그대로 보여줌 (readonly)
             } else {
               alert("데이터가 존재하지 않습니다.");
             }
@@ -99,15 +102,12 @@ export default {
         updatedAt: new Date().toISOString()
       };
 
-      const updates = {};
-      updates['/posts/' + this.id] = updatedData;
-
       update(db, updatedData);
+      alert("게시글이 수정되었습니다.");
     },
     deletePost() {
       const db = ref(this.$db, `posts/${this.id}`);
-      set(db, null); 
-
+      set(db, null);
       this.$router.push('/');
     }
   }
