@@ -27,7 +27,9 @@ import { ref, push, set, get, child, update } from "firebase/database";
 export default {
   created() {
     this.id = this.$route.query.id;
-    this.doDetail();
+    if(this.id != null && this.id != '') {
+      this.doDetail();
+    }
   },
   data () {
     return {
